@@ -97,6 +97,14 @@ export function Navigation() {
                     </div>
                   </div>
                   <DropdownMenuSeparator />
+                  {user.role === "manufacturer" && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link href="/factory/inventory">Manage Inventory</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   <DropdownMenuItem asChild>
                     <Link href="/profile">Order History</Link>
                   </DropdownMenuItem>
