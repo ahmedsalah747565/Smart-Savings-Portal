@@ -31,7 +31,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("win-store-cart", JSON.stringify(items));
   }, [items]);
 
-  const addItem = (product: Product, quantity = 1) => {
+  const addItem = (product: ProductWithDetails, quantity = 1) => {
     setItems((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
       if (existing) {

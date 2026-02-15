@@ -1,6 +1,6 @@
 import {
   users, factories, categories, products, reviews, orders, orderItems,
-  type User, type InsertUser, type Factory, type Category, type Product, type Review, type Order, type OrderItem,
+  type User, type UpsertUser, type Factory, type Category, type Product, type Review, type Order, type OrderItem,
   type CreateReviewRequest, type CreateOrderRequest, type ProductWithDetails, type OrderWithItems
 } from "@shared/schema";
 import { db } from "./db";
@@ -10,7 +10,7 @@ export interface IStorage {
   // Users (Auth handled by Replit Auth, but we might need these)
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  createUser(user: UpsertUser): Promise<User>;
 
   // Factories
   getFactories(): Promise<Factory[]>;
@@ -40,11 +40,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
+    const [user] = await db.select().from(users).where(eq(users.email, username));
     return user;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
+  async createUser(insertUser: UpsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
