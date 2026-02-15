@@ -1,4 +1,4 @@
-import { Product } from "@shared/schema";
+import { ProductWithDetails } from "@shared/schema";
 import { Link } from "wouter";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { useCart } from "@/hooks/use-cart";
 import { motion } from "framer-motion";
 
 interface ProductCardProps {
-  product: Product;
+  product: ProductWithDetails;
 }
 
 export function ProductCard({ product }: ProductCardProps) {

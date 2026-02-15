@@ -128,7 +128,7 @@ export class DatabaseStorage implements IStorage {
     const results = await db.select({
       review: reviews,
       user: {
-        username: users.username, // Just need username for display
+        username: users.email, // Using email as username since Replit Auth doesn't have username field by default
       }
     })
     .from(reviews)
@@ -136,10 +136,11 @@ export class DatabaseStorage implements IStorage {
     .where(eq(reviews.productId, productId))
     .orderBy(desc(reviews.createdAt));
 
-    return results.map(r => ({ ...r.review, user: r.user }));
+    // Map email to username for display
+    return results.map(r => ({ ...r.review, user: { username: r.user.username?.split('@')[0] || 'Anonymous' } }));
   }
 
-  async createReview(userId: string, productId: number, review: CreateReviewRequest): Promise<Review> {
+  async createReview(userId: string, productId: number, review: { rating: number; comment?: string | null }): Promise<Review> {
     const [newReview] = await db.insert(reviews).values({
       userId,
       productId,

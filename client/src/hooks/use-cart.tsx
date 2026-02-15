@@ -1,15 +1,15 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
-import { Product } from "@shared/schema";
+import { Product, ProductWithDetails } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 
 export type CartItem = {
-  product: Product;
+  product: ProductWithDetails;
   quantity: number;
 };
 
 type CartContextType = {
   items: CartItem[];
-  addItem: (product: Product, quantity?: number) => void;
+  addItem: (product: ProductWithDetails, quantity?: number) => void;
   removeItem: (productId: number) => void;
   updateQuantity: (productId: number, quantity: number) => void;
   clearCart: () => void;

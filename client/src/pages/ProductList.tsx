@@ -94,9 +94,9 @@ export default function ProductList() {
             <h3 className="text-xl font-bold mb-2">No products found</h3>
             <p className="text-muted-foreground">Try adjusting your search or filters.</p>
             <Button 
-              variant="link" 
+              variant="ghost" 
               onClick={() => { setSearch(""); setCategory(""); }}
-              className="mt-4 text-primary"
+              className="mt-4 text-primary hover:text-primary/80 underline"
             >
               Clear all filters
             </Button>

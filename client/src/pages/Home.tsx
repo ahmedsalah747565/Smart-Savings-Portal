@@ -5,6 +5,7 @@ import { ArrowRight, ShieldCheck, Truck, BadgeDollarSign, Star, TrendingUp } fro
 import { useProducts, useFactories } from "@/hooks/use-products";
 import { ProductCard } from "@/components/ProductCard";
 import { Separator } from "@/components/ui/separator";
+import { Card } from "@/components/ui/card";
 
 // Simple "Savings Counter" mock animation
 const SavingsCounter = () => {

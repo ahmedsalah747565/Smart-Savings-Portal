@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { insertProductSchema, insertReviewSchema, products, factories, categories, reviews, orders, orderItems } from './schema';
 
+export * from './schema';
+
 // ============================================
 // SHARED ERROR SCHEMAS
 // ============================================
