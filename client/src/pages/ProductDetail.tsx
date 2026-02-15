@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ShoppingCart, Check, Truck, ShieldCheck, ArrowLeft } from "lucide-react";
+import { ShoppingCart, Check, Truck, ShieldCheck, ArrowLeft, Calendar } from "lucide-react";
 import { PriceTransparencyWidget } from "@/components/PriceTransparencyWidget";
 import { Link } from "wouter";
+import { format } from "date-fns";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -61,10 +62,16 @@ export default function ProductDetail() {
 
           {/* Product Info */}
           <div className="flex flex-col">
-            <div className="mb-2">
+            <div className="mb-2 flex items-center justify-between">
               <Link href={`/factories/${product.factory.id}`} className="text-sm font-semibold text-primary uppercase tracking-wider hover:underline">
                 Made by {product.factory.name}
               </Link>
+              {product.expiryDate && (
+                <Badge variant="outline" className="text-muted-foreground gap-1 border-muted">
+                  <Calendar className="w-3 h-3" />
+                  Expires: {format(new Date(product.expiryDate), "PPP")}
+                </Badge>
+              )}
             </div>
             
             <h1 className="text-4xl font-heading font-bold text-foreground mb-4">{product.name}</h1>

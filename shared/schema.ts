@@ -39,6 +39,7 @@ export const products = pgTable("products", {
   videoUrl: text("video_url"),
   stock: integer("stock").notNull().default(0),
   specs: jsonb("specs"), // For flexible product specifications
+  expiryDate: timestamp("expiry_date"), // Added expiry date for food/cosmetics
 });
 
 // === REVIEWS ===

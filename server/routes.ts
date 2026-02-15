@@ -206,6 +206,30 @@ async function seedDatabase() {
       imageUrl: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=2680&auto=format&fit=crop",
       stock: 500,
       specs: { material: "100% Organic Cotton", weight: "220gsm", fit: "Relaxed" }
+    },
+    {
+      name: "Organic Face Serum",
+      description: "Vitamin C and E serum for radiant skin. All natural ingredients.",
+      price: "25.00",
+      originalPrice: "75.00",
+      factoryId: createdFactories[0].id,
+      categoryId: createdCategories[0].id,
+      imageUrl: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=2574&auto=format&fit=crop",
+      stock: 100,
+      expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+      specs: { size: "30ml", ingredients: ["Vitamin C", "Vitamin E", "Hyaluronic Acid"] }
+    },
+    {
+      name: "Whole Grain Granola",
+      description: "Healthy and delicious granola with nuts and honey.",
+      price: "12.00",
+      originalPrice: "30.00",
+      factoryId: createdFactories[0].id,
+      categoryId: createdCategories[0].id,
+      imageUrl: "https://images.unsplash.com/photo-1517093157656-b942182005ee?q=80&w=2574&auto=format&fit=crop",
+      stock: 300,
+      expiryDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000), // 6 months from now
+      specs: { weight: "500g", organic: true }
     }
   ];
 

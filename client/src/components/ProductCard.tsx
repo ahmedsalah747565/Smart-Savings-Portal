@@ -3,9 +3,10 @@ import { Link } from "wouter";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Eye } from "lucide-react";
+import { ShoppingCart, Eye, Calendar } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { motion } from "framer-motion";
+import { format } from "date-fns";
 
 interface ProductCardProps {
   product: ProductWithDetails;
@@ -27,6 +28,12 @@ export function ProductCard({ product }: ProductCardProps) {
           <Badge className="absolute top-3 left-3 z-10 bg-accent text-accent-foreground font-bold shadow-md">
             -{savings}% OFF
           </Badge>
+          {product.expiryDate && (
+            <Badge variant="secondary" className="absolute top-3 right-3 z-10 bg-white/90 text-xs gap-1">
+              <Calendar className="w-3 h-3" />
+              Exp: {format(new Date(product.expiryDate), "MM/yy")}
+            </Badge>
+          )}
           <img
             src={product.imageUrl}
             alt={product.name}
