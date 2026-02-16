@@ -1,6 +1,7 @@
 import * as client from "openid-client";
 import { Strategy, type VerifyFunction } from "openid-client/passport";
-
+import { Strategy as LocalStrategy } from "passport-local";
+import bcrypt from "bcryptjs";
 import passport from "passport";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
@@ -28,13 +29,13 @@ export function getSession() {
     tableName: "sessions",
   });
   return session({
-    secret: process.env.SESSION_SECRET!,
+    secret: process.env.SESSION_SECRET || "default_local_secret",
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
       maxAge: sessionTtl,
     },
   });
@@ -66,13 +67,92 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  passport.serializeUser((user: any, cb) => cb(null, user.id));
+  passport.deserializeUser(async (id: string, cb) => {
+    try {
+      const user = await authStorage.getUser(id);
+      cb(null, user);
+    } catch (err) {
+      cb(err);
+    }
+  });
+
+  if (!process.env.REPL_ID) {
+    console.log("REPL_ID not found, using local auth with database");
+
+    passport.use(
+      new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
+        try {
+          const user = await authStorage.getUserByEmail(email);
+          if (!user || !user.password) {
+            return done(null, false, { message: "Invalid email or password" });
+          }
+          const isMatch = await bcrypt.compare(password, user.password);
+          if (!isMatch) {
+            return done(null, false, { message: "Invalid email or password" });
+          }
+          return done(null, user);
+        } catch (err) {
+          return done(err);
+        }
+      })
+    );
+
+    app.post("/api/register", async (req, res) => {
+      try {
+        const { email, password, firstName, lastName } = req.body;
+        if (!email || !password) {
+          return res.status(400).json({ message: "Email and password are required" });
+        }
+        const existingUser = await authStorage.getUserByEmail(email);
+        if (existingUser) {
+          return res.status(400).json({ message: "Email already registered" });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = await authStorage.upsertUser({
+          email,
+          password: hashedPassword,
+          firstName,
+          lastName,
+          role: "user"
+        });
+
+        req.login(user, (err) => {
+          if (err) return res.status(500).json({ message: "Login failed after registration" });
+          res.status(201).json(user);
+        });
+      } catch (error) {
+        console.error("Registration error:", error);
+        res.status(500).json({ message: "Registration failed" });
+      }
+    });
+
+    app.post("/api/login", (req, res, next) => {
+      passport.authenticate("local", (err: any, user: any, info: any) => {
+        if (err) return next(err);
+        if (!user) return res.status(401).json({ message: info.message || "Login failed" });
+        req.login(user, (err) => {
+          if (err) return next(err);
+          res.json(user);
+        });
+      })(req, res, next);
+    });
+
+    app.get("/api/logout", (req, res) => {
+      req.logout(() => res.json({ message: "Logged out" }));
+    });
+
+    return;
+  }
+
   const config = await getOidcConfig();
 
   const verify: VerifyFunction = async (
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
-    const user = {};
+    const user: any = { role: "user" };
     updateUserSession(user, tokens);
     await upsertUser(tokens.claims());
     verified(null, user);
@@ -98,9 +178,6 @@ export async function setupAuth(app: Express) {
       registeredStrategies.add(strategyName);
     }
   };
-
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
     ensureStrategy(req.hostname);
@@ -131,9 +208,18 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user.expires_at) {
+  // For Local Auth, there is no expires_at check like OIDC unless we implement it.
+  if (!process.env.REPL_ID) {
+    return next();
+  }
+
+  if (!user.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 

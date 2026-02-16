@@ -45,7 +45,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
     toast({
       title: "Added to cart",
-      description: `${product.name} is now in your cart.`,
+      description: `${product.nameEn} is now in your cart.`,
     });
   };
 
@@ -76,7 +76,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     (sum, item) =>
       sum +
       (Number(item.product.originalPrice) - Number(item.product.price)) *
-        item.quantity,
+      item.quantity,
     0
   );
 

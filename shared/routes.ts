@@ -102,6 +102,7 @@ export const api = {
           productId: z.number(),
           quantity: z.number().min(1),
         })),
+        paymentMethod: z.enum(['cash', 'visa']).default('cash'),
       }),
       responses: {
         201: z.custom<typeof orders.$inferSelect>(),

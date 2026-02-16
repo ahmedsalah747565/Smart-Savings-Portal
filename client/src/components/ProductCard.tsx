@@ -1,3 +1,4 @@
+import * as React from "react";
 import { ProductWithDetails } from "@shared/schema";
 import { Link } from "wouter";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { ShoppingCart, Eye, Calendar } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+import { useTranslation } from "@/lib/i18n";
 
 interface ProductCardProps {
   product: ProductWithDetails;
@@ -14,6 +16,11 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addItem } = useCart();
+  const { language, t } = useTranslation();
+
+  const name = language === "ar" ? product.nameAr : product.nameEn;
+  const description = language === "ar" ? product.descriptionAr : product.descriptionEn;
+
   const savings = Math.round(((Number(product.originalPrice) - Number(product.price)) / Number(product.originalPrice)) * 100);
 
   return (
@@ -36,7 +43,7 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
           <img
             src={product.imageUrl}
-            alt={product.name}
+            alt={name}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
@@ -46,13 +53,14 @@ export function ProductCard({ product }: ProductCardProps) {
                 View
               </Button>
             </Link>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               className="bg-primary hover:bg-primary/90 text-white font-medium shadow-lg shadow-primary/30"
               onClick={() => addItem(product)}
+              disabled={product.stock === 0}
             >
               <ShoppingCart className="w-4 h-4 mr-2" />
-              Add
+              {product.stock === 0 ? t("product.out_of_stock") : t("product.add_to_cart")}
             </Button>
           </div>
         </div>
@@ -60,12 +68,17 @@ export function ProductCard({ product }: ProductCardProps) {
         <CardContent className="p-4 flex-grow">
           <Link href={`/product/${product.id}`}>
             <h3 className="font-heading font-bold text-lg leading-tight mb-2 group-hover:text-primary transition-colors cursor-pointer line-clamp-2">
-              {product.name}
+              {name}
             </h3>
           </Link>
           <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-            {product.description}
+            {description}
           </p>
+          <div className="text-xs font-semibold flex items-center gap-1">
+            <span className={product.stock > 0 ? "text-green-600" : "text-destructive"}>
+              {t("product.stock")}: {product.stock}
+            </span>
+          </div>
         </CardContent>
 
         <CardFooter className="p-4 pt-0 flex justify-between items-end border-t border-border/40 mt-auto bg-muted/20">

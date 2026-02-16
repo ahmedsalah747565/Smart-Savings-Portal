@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useState } from "react";
 import { useProducts, useCategories } from "@/hooks/use-products";
 import { ProductCard } from "@/components/ProductCard";
@@ -6,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslation } from "@/lib/i18n";
 
 export default function ProductList() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("");
   const [sort, setSort] = useState<string>("newest");
+  const { language } = useTranslation();
 
   const { data: products, isLoading } = useProducts({ search, category, sort });
   const { data: categories } = useCategories();
@@ -26,9 +29,9 @@ export default function ProductList() {
               <p className="text-muted-foreground">Factory direct prices on premium goods.</p>
             </div>
             <div className="flex items-center gap-2">
-               <span className="text-sm text-muted-foreground font-medium">
-                 {products?.length || 0} Products
-               </span>
+              <span className="text-sm text-muted-foreground font-medium">
+                {products?.length || 0} Products
+              </span>
             </div>
           </div>
 
@@ -36,23 +39,25 @@ export default function ProductList() {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-grow md:max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search products..." 
+              <Input
+                placeholder="Search products..."
                 className="pl-9 bg-muted/20 border-border focus:border-primary focus:ring-primary/20"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            
+
             <div className="flex gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {categories?.map((cat: any) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
+                    <SelectItem key={cat.id} value={cat.id.toString()}>
+                      {language === "ar" ? cat.nameAr : cat.nameEn}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -93,9 +98,9 @@ export default function ProductList() {
             </div>
             <h3 className="text-xl font-bold mb-2">No products found</h3>
             <p className="text-muted-foreground">Try adjusting your search or filters.</p>
-            <Button 
-              variant="ghost" 
-              onClick={() => { setSearch(""); setCategory(""); }}
+            <Button
+              variant="ghost"
+              onClick={() => { setSearch(""); setCategory("all"); }}
               className="mt-4 text-primary hover:text-primary/80 underline"
             >
               Clear all filters

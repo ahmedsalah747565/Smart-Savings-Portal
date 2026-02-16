@@ -1,10 +1,11 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
-import { ShoppingBag, User, LogOut, Menu, X, Crown } from "lucide-react";
+import { ShoppingBag, User, LogOut, Menu, X, Crown, Languages } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/i18n";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,18 +13,33 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@shared/routes";
 
 export function Navigation() {
   const [location] = useLocation();
   const { user, logout } = useAuth();
   const { itemCount } = useCart();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { language, setLanguage, t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  const applyAsVendorMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/user/apply-vendor", { method: "POST" });
+      if (!res.ok) throw new Error("Failed to apply as vendor");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user/current"] });
+    }
+  });
 
   const links = [
-    { href: "/", label: "Home" },
-    { href: "/products", label: "Shop" },
-    { href: "/factories", label: "Our Factories" },
-    { href: "/about", label: "About Us" },
+    { href: "/", label: t("nav.home") },
+    { href: "/products", label: t("nav.shop") },
+    { href: "/factories", label: t("nav.factories") },
+    { href: "/about", label: t("nav.about") },
   ];
 
   return (
@@ -60,7 +76,17 @@ export function Navigation() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1 md:space-x-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setLanguage(language === "en" ? "ar" : "en")}
+              title={language === "en" ? "العربية" : "English"}
+              className="text-muted-foreground hover:text-primary transition-colors"
+            >
+              <Languages className="h-5 w-5" />
+            </Button>
+
             <Link href="/cart">
               <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-primary transition-colors">
                 <ShoppingBag className="h-5 w-5" />
@@ -97,26 +123,36 @@ export function Navigation() {
                     </div>
                   </div>
                   <DropdownMenuSeparator />
+
+                  {user.role === "vendor" ? (
+                    <DropdownMenuItem asChild>
+                      <Link href="/vendor/dashboard">{t("nav.vendor_dashboard")}</Link>
+                    </DropdownMenuItem>
+                  ) : user.role === "user" ? (
+                    <DropdownMenuItem onClick={() => applyAsVendorMutation.mutate()} disabled={applyAsVendorMutation.isPending}>
+                      {t("nav.apply_vendor")}
+                    </DropdownMenuItem>
+                  ) : null}
+
                   {user.role === "manufacturer" && (
-                    <>
-                      <DropdownMenuItem asChild>
-                        <Link href="/factory/inventory">Manage Inventory</Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                    </>
+                    <DropdownMenuItem asChild>
+                      <Link href="/factory/inventory">{t("nav.inventory")}</Link>
+                    </DropdownMenuItem>
                   )}
+
                   <DropdownMenuItem asChild>
-                    <Link href="/profile">Order History</Link>
+                    <Link href="/profile">{t("nav.orders")}</Link>
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => logout()} className="text-destructive focus:text-destructive">
                     <LogOut className="mr-2 h-4 w-4" />
-                    Log out
+                    {t("nav.logout")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <Button asChild variant="default" size="sm" className="bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/20">
-                <a href="/api/login">Log In</a>
+                <Link href="/auth">{t("nav.login")}</Link>
               </Button>
             )}
 
@@ -149,6 +185,17 @@ export function Navigation() {
               {link.label}
             </Link>
           ))}
+          <Button
+            variant="ghost"
+            className="w-full justify-start"
+            onClick={() => {
+              setLanguage(language === "en" ? "ar" : "en");
+              setIsMobileMenuOpen(false);
+            }}
+          >
+            <Languages className="h-4 w-4 mr-2" />
+            {language === "en" ? "العربية" : "English"}
+          </Button>
         </div>
       )}
     </nav>

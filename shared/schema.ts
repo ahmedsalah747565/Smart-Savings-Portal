@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb, decimal } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, decimal, varchar } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -10,10 +10,14 @@ export * from "./models/auth";
 // === FACTORIES ===
 export const factories = pgTable("factories", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description").notNull(),
-  location: text("location").notNull(),
-  originStory: text("origin_story").notNull(),
+  nameEn: text("name_en").notNull(),
+  nameAr: text("name_ar").notNull(),
+  descriptionEn: text("description_en").notNull(),
+  descriptionAr: text("description_ar").notNull(),
+  locationEn: text("location_en").notNull(),
+  locationAr: text("location_ar").notNull(),
+  originStoryEn: text("origin_story_en").notNull(),
+  originStoryAr: text("origin_story_ar").notNull(),
   imageUrl: text("image_url").notNull(),
   logoUrl: text("logo_url"),
 });
@@ -21,20 +25,25 @@ export const factories = pgTable("factories", {
 // === CATEGORIES ===
 export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
+  nameEn: text("name_en").notNull(),
+  nameAr: text("name_ar").notNull(),
+  descriptionEn: text("description_en"),
+  descriptionAr: text("description_ar"),
   imageUrl: text("image_url"),
 });
 
 // === PRODUCTS ===
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description").notNull(),
+  nameEn: text("name_en").notNull(),
+  nameAr: text("name_ar").notNull(),
+  descriptionEn: text("description_en").notNull(),
+  descriptionAr: text("description_ar").notNull(),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   originalPrice: decimal("original_price", { precision: 10, scale: 2 }).notNull(), // For savings calculation
-  factoryId: integer("factory_id").references(() => factories.id).notNull(),
+  factoryId: integer("factory_id").references(() => factories.id), // Made optional if vendor direct
   categoryId: integer("category_id").references(() => categories.id).notNull(),
+  vendorId: varchar("vendor_id").references(() => users.id), // Link to the user who is the vendor
   imageUrl: text("image_url").notNull(),
   videoUrl: text("video_url"),
   stock: integer("stock").notNull().default(0),
@@ -58,6 +67,7 @@ export const orders = pgTable("orders", {
   userId: text("user_id").references(() => users.id).notNull(),
   total: decimal("total", { precision: 10, scale: 2 }).notNull(),
   status: text("status").notNull().default("pending"), // pending, paid, shipped, delivered
+  paymentMethod: text("payment_method").notNull().default("cash"), // cash, visa
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -71,6 +81,11 @@ export const orderItems = pgTable("order_items", {
 });
 
 // === RELATIONS ===
+export const usersRelations = relations(users, ({ many }) => ({
+  products: many(products),
+  orders: many(orders),
+}));
+
 export const factoriesRelations = relations(factories, ({ many }) => ({
   products: many(products),
 }));
@@ -87,6 +102,10 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   category: one(categories, {
     fields: [products.categoryId],
     references: [categories.id],
+  }),
+  vendor: one(users, {
+    fields: [products.vendorId],
+    references: [users.id],
   }),
   reviews: many(reviews),
 }));
@@ -140,10 +159,11 @@ export type OrderItem = typeof orderItems.$inferSelect;
 export type CreateReviewRequest = z.infer<typeof insertReviewSchema>;
 export type CreateOrderRequest = {
   items: { productId: number; quantity: number }[];
+  paymentMethod: string;
 };
 
 export type ProductWithDetails = Product & {
-  factory: Factory;
+  factory: Factory | null;
   category: Category;
 };
 

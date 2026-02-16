@@ -26,8 +26,12 @@ type AuthContextType = {
   user: User | null | undefined;
   isLoading: boolean;
   isAuthenticated: boolean;
+  login: (credentials: any) => Promise<void>;
+  register: (data: any) => Promise<void>;
+  updateProfile: (data: Partial<User>) => Promise<void>;
   logout: () => void;
   isLoggingOut: boolean;
+  isUpdating: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,6 +45,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
+  const loginMutation = useMutation({
+    mutationFn: async (credentials: any) => {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credentials),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Login failed");
+      }
+      return res.json();
+    },
+    onSuccess: (user: User) => {
+      queryClient.setQueryData(["/api/auth/user"], user);
+    },
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Registration failed");
+      }
+      return res.json();
+    },
+    onSuccess: (user: User) => {
+      queryClient.setQueryData(["/api/auth/user"], user);
+    },
+  });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: Partial<User>) => {
+      const res = await fetch("/api/auth/user", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Update profile failed");
+      }
+      return res.json();
+    },
+    onSuccess: (user: User) => {
+      queryClient.setQueryData(["/api/auth/user"], user);
+    },
+  });
+
   const logoutMutation = useMutation({
     mutationFn: logout,
     onSuccess: () => {
@@ -52,8 +110,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     isLoading,
     isAuthenticated: !!user,
+    login: async (credentials: any) => {
+      await loginMutation.mutateAsync(credentials);
+    },
+    register: async (data: any) => {
+      await registerMutation.mutateAsync(data);
+    },
+    updateProfile: async (data: Partial<User>) => {
+      await updateProfileMutation.mutateAsync(data);
+    },
     logout: logoutMutation.mutate,
     isLoggingOut: logoutMutation.isPending,
+    isUpdating: updateProfileMutation.isPending,
   };
 
   return createElement(AuthContext.Provider, { value }, children);

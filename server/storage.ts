@@ -28,8 +28,14 @@ export interface IStorage {
   createReview(userId: string, productId: number, review: CreateReviewRequest): Promise<Review>;
 
   // Orders
-  createOrder(userId: string, items: { productId: number; quantity: number }[]): Promise<Order>;
+  createOrder(userId: string, items: { productId: number; quantity: number }[], paymentMethod: string): Promise<Order>;
   getOrders(userId: string): Promise<OrderWithItems[]>;
+
+  // Vendor Management
+  updateUserRole(userId: string, role: string): Promise<void>;
+  createProduct(vendorId: string, productData: any): Promise<Product>;
+  updateProduct(vendorId: string, productId: number, productData: any): Promise<Product>;
+  getVendorProducts(vendorId: string): Promise<Product[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -71,22 +77,19 @@ export class DatabaseStorage implements IStorage {
       factory: factories,
       category: categories,
     })
-    .from(products)
-    .innerJoin(factories, eq(products.factoryId, factories.id))
-    .innerJoin(categories, eq(products.categoryId, categories.id));
+      .from(products)
+      .leftJoin(factories, eq(products.factoryId, factories.id))
+      .innerJoin(categories, eq(products.categoryId, categories.id));
 
     if (filters?.category) {
-      // Assuming filters.category is category name for now, or ID. Let's use name match or ID if number
       const catId = parseInt(filters.category);
       if (!isNaN(catId)) {
         query.where(eq(products.categoryId, catId));
-      } else {
-        // If string name, we'd need to join categories and filter by name, but let's stick to ID for simplicity or handle logic here
       }
     }
 
     if (filters?.search) {
-      query.where(sql`${products.name} ILIKE ${`%${filters.search}%`}`);
+      query.where(sql`(${products.nameEn} ILIKE ${`%${filters.search}%`} OR ${products.nameAr} ILIKE ${`%${filters.search}%`})`);
     }
 
     if (filters?.sort) {
@@ -98,9 +101,9 @@ export class DatabaseStorage implements IStorage {
     const results = await query;
     return results.map(r => ({
       ...r.product,
-      factory: r.factory,
+      factory: r.factory || null,
       category: r.category,
-    }));
+    })) as ProductWithDetails[];
   }
 
   async getProduct(id: number): Promise<ProductWithDetails | undefined> {
@@ -109,18 +112,18 @@ export class DatabaseStorage implements IStorage {
       factory: factories,
       category: categories,
     })
-    .from(products)
-    .innerJoin(factories, eq(products.factoryId, factories.id))
-    .innerJoin(categories, eq(products.categoryId, categories.id))
-    .where(eq(products.id, id));
+      .from(products)
+      .leftJoin(factories, eq(products.factoryId, factories.id))
+      .innerJoin(categories, eq(products.categoryId, categories.id))
+      .where(eq(products.id, id));
 
     if (!result) return undefined;
 
     return {
       ...result.product,
-      factory: result.factory,
+      factory: result.factory || null,
       category: result.category,
-    };
+    } as ProductWithDetails;
   }
 
   // Reviews
@@ -128,15 +131,14 @@ export class DatabaseStorage implements IStorage {
     const results = await db.select({
       review: reviews,
       user: {
-        username: users.email, // Using email as username since Replit Auth doesn't have username field by default
+        username: users.email,
       }
     })
-    .from(reviews)
-    .innerJoin(users, eq(reviews.userId, users.id))
-    .where(eq(reviews.productId, productId))
-    .orderBy(desc(reviews.createdAt));
+      .from(reviews)
+      .innerJoin(users, eq(reviews.userId, users.id))
+      .where(eq(reviews.productId, productId))
+      .orderBy(desc(reviews.createdAt));
 
-    // Map email to username for display
     return results.map(r => ({ ...r.review, user: { username: r.user.username?.split('@')[0] || 'Anonymous' } }));
   }
 
@@ -150,42 +152,64 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Orders
-  async createOrder(userId: string, items: { productId: number; quantity: number }[]): Promise<Order> {
-    // Calculate total price
-    let total = 0;
-    const orderItemsData = [];
-
-    for (const item of items) {
-      const [product] = await db.select().from(products).where(eq(products.id, item.productId));
-      if (!product) throw new Error(`Product ${item.productId} not found`);
-
-      const price = Number(product.price);
-      total += price * item.quantity;
-      orderItemsData.push({
-        productId: item.productId,
-        quantity: item.quantity,
-        price: product.price // Store snapshot of price
-      });
+  async createOrder(userId: string, items: { productId: number; quantity: number }[], paymentMethod: string): Promise<Order> {
+    // MOQ: 30 items total
+    const totalQuantity = items.reduce((sum: number, item: any) => sum + item.quantity, 0);
+    if (totalQuantity < 30) {
+      throw new Error("A minimum of 30 items is required to place an order");
     }
 
-    // Create order
-    const [order] = await db.insert(orders).values({
-      userId,
-      total: total.toString(),
-      status: "pending"
-    }).returning();
+    return await db.transaction(async (tx: any) => {
+      let total = 0;
+      const orderItemsData = [];
 
-    // Create order items
-    for (const itemData of orderItemsData) {
-      await db.insert(orderItems).values({
-        orderId: order.id,
-        productId: itemData.productId,
-        quantity: itemData.quantity,
-        price: itemData.price
-      });
-    }
+      for (const item of items) {
+        // Atomic stock check and decrement
+        const [product] = await tx.select()
+          .from(products)
+          .where(eq(products.id, item.productId))
+          .for('update'); // Lock the row for the transaction
 
-    return order;
+        if (!product) throw new Error(`Product ${item.productId} not found`);
+        if (product.stock < item.quantity) {
+          throw new Error(`Insufficient stock for product: ${product.nameEn}`);
+        }
+
+        const price = Number(product.price);
+        total += price * item.quantity;
+
+        // Decrement stock
+        await tx.update(products)
+          .set({ stock: product.stock - item.quantity })
+          .where(eq(products.id, item.productId));
+
+        orderItemsData.push({
+          productId: item.productId,
+          quantity: item.quantity,
+          price: product.price
+        });
+      }
+
+      // Create order
+      const [order] = await tx.insert(orders).values({
+        userId,
+        total: total.toString(),
+        status: "pending",
+        paymentMethod
+      }).returning();
+
+      // Create order items
+      for (const itemData of orderItemsData) {
+        await tx.insert(orderItems).values({
+          orderId: order.id,
+          productId: itemData.productId,
+          quantity: itemData.quantity,
+          price: itemData.price
+        });
+      }
+
+      return order;
+    });
   }
 
   async getOrders(userId: string): Promise<OrderWithItems[]> {
@@ -196,9 +220,9 @@ export class DatabaseStorage implements IStorage {
         orderItem: orderItems,
         product: products
       })
-      .from(orderItems)
-      .innerJoin(products, eq(orderItems.productId, products.id))
-      .where(eq(orderItems.orderId, order.id));
+        .from(orderItems)
+        .innerJoin(products, eq(orderItems.productId, products.id))
+        .where(eq(orderItems.orderId, order.id));
 
       return {
         ...order,
@@ -206,7 +230,33 @@ export class DatabaseStorage implements IStorage {
       };
     }));
 
-    return ordersWithItems;
+    return ordersWithItems as OrderWithItems[];
+  }
+
+  // Vendor Management
+  async updateUserRole(userId: string, role: string): Promise<void> {
+    await db.update(users).set({ role }).where(eq(users.id, userId));
+  }
+
+  async createProduct(vendorId: string, productData: any): Promise<Product> {
+    const [product] = await db.insert(products).values({
+      ...productData,
+      vendorId,
+    }).returning();
+    return product;
+  }
+
+  async updateProduct(vendorId: string, productId: number, productData: any): Promise<Product> {
+    const [product] = await db.update(products)
+      .set(productData)
+      .where(and(eq(products.id, productId), eq(products.vendorId, vendorId)))
+      .returning();
+    if (!product) throw new Error("Product not found or unauthorized");
+    return product;
+  }
+
+  async getVendorProducts(vendorId: string): Promise<Product[]> {
+    return await db.select().from(products).where(eq(products.vendorId, vendorId));
   }
 }
 
