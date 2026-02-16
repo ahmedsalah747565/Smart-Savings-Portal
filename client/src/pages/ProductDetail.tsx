@@ -86,11 +86,11 @@ export default function ProductDetail() {
 
             <div className="flex items-end gap-4 mb-6">
               <div>
-                <span className="text-3xl font-bold text-foreground">${Number(product.price).toFixed(2)}</span>
+                <span className="text-3xl font-bold text-foreground">{t("common.currency")} {Number(product.price).toFixed(2)}</span>
               </div>
               <div className="flex flex-col pb-1">
-                <span className="text-sm text-muted-foreground line-through">Retail: ${Number(product.originalPrice).toFixed(2)}</span>
-                <span className="text-sm font-bold text-green-600">Save ${Number(Number(product.originalPrice) - Number(product.price)).toFixed(2)}</span>
+                <span className="text-sm text-muted-foreground line-through">Retail: {t("common.currency")} {Number(product.originalPrice).toFixed(2)}</span>
+                <span className="text-sm font-bold text-green-600">Save {t("common.currency")} {Number(Number(product.originalPrice) - Number(product.price)).toFixed(2)}</span>
               </div>
             </div>
 
@@ -119,7 +119,7 @@ export default function ProductDetail() {
             <div className="grid grid-cols-2 gap-4 mb-8 text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Truck className="w-5 h-5 text-foreground" />
-                <span>Free shipping over $100</span>
+                <span>Free shipping over {t("common.currency")} 100</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <ShieldCheck className="w-5 h-5 text-foreground" />

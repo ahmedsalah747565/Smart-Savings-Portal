@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation, Link } from "wouter";
 import { Loader2, CreditCard, Banknote, ShieldCheck } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useTranslation } from "@/lib/i18n";
 
 export default function Checkout() {
   const { items, total, clearCart } = useCart();
@@ -19,6 +20,7 @@ export default function Checkout() {
   const { toast } = useToast();
   const [_, setLocation] = useLocation();
   const [paymentMethod, setPaymentMethod] = React.useState<"cash" | "visa">("cash");
+  const { t, language } = useTranslation();
 
   if (authLoading) return <div className="p-10 text-center"><Loader2 className="animate-spin w-8 h-8 mx-auto" /></div>;
 
@@ -182,8 +184,8 @@ export default function Checkout() {
                 <div className="space-y-3">
                   {items.map(item => (
                     <div key={item.product.id} className="flex justify-between text-sm">
-                      <span className="truncate w-2/3 text-muted-foreground">{item.product.nameEn} x {item.quantity}</span>
-                      <span className="font-medium">${(Number(item.product.price) * item.quantity).toFixed(2)}</span>
+                      <span className="truncate w-2/3 text-muted-foreground">{language === "ar" ? item.product.nameAr : item.product.nameEn} x {item.quantity}</span>
+                      <span className="font-medium">{t("common.currency")} {(Number(item.product.price) * item.quantity).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
@@ -191,7 +193,7 @@ export default function Checkout() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>Subtotal</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>{t("common.currency")} {total.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>Shipping</span>
@@ -200,7 +202,7 @@ export default function Checkout() {
                   <Separator />
                   <div className="flex justify-between font-bold text-xl py-2">
                     <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>{t("common.currency")} {total.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -214,7 +216,7 @@ export default function Checkout() {
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...
                     </>
-                  ) : paymentMethod === "cash" ? "Place Order ($" + total.toFixed(2) + ")" : "Pay & Place Order"}
+                  ) : paymentMethod === "cash" ? `Place Order (${t("common.currency")} ${total.toFixed(2)})` : "Pay & Place Order"}
                 </Button>
 
                 <p className="text-[10px] text-center text-muted-foreground">

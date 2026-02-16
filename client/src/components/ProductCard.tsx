@@ -83,9 +83,9 @@ export function ProductCard({ product }: ProductCardProps) {
 
         <CardFooter className="p-4 pt-0 flex justify-between items-end border-t border-border/40 mt-auto bg-muted/20">
           <div className="flex flex-col pt-3">
-            <span className="text-xs text-muted-foreground line-through">Retail: ${Number(product.originalPrice).toFixed(2)}</span>
+            <span className="text-xs text-muted-foreground line-through">Retail: {t("common.currency")} {Number(product.originalPrice).toFixed(2)}</span>
             <div className="flex items-baseline gap-1">
-              <span className="text-sm font-bold text-primary">$</span>
+              <span className="text-sm font-bold text-primary">{t("common.currency")}</span>
               <span className="text-xl font-bold text-foreground">{Number(product.price).toFixed(2)}</span>
             </div>
           </div>

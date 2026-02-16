@@ -140,6 +140,12 @@ export function Navigation() {
                     </DropdownMenuItem>
                   )}
 
+                  {user.role === "admin" && (
+                    <DropdownMenuItem asChild className="bg-primary/5 text-primary font-bold">
+                      <Link href="/admin">Admin Dashboard</Link>
+                    </DropdownMenuItem>
+                  )}
+
                   <DropdownMenuItem asChild>
                     <Link href="/profile">{t("nav.orders")}</Link>
                   </DropdownMenuItem>

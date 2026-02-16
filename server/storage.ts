@@ -30,12 +30,17 @@ export interface IStorage {
   // Orders
   createOrder(userId: string, items: { productId: number; quantity: number }[], paymentMethod: string): Promise<Order>;
   getOrders(userId: string): Promise<OrderWithItems[]>;
+  updateOrderStatus(orderId: number, status: string): Promise<Order>;
 
   // Vendor Management
   updateUserRole(userId: string, role: string): Promise<void>;
   createProduct(vendorId: string, productData: any): Promise<Product>;
   updateProduct(vendorId: string, productId: number, productData: any): Promise<Product>;
   getVendorProducts(vendorId: string): Promise<Product[]>;
+  getAllUsers(): Promise<User[]>;
+  getAllOrders(): Promise<OrderWithItems[]>;
+  deleteUser(id: string): Promise<void>;
+  deleteProduct(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -233,6 +238,24 @@ export class DatabaseStorage implements IStorage {
     return ordersWithItems as OrderWithItems[];
   }
 
+  async updateOrderStatus(orderId: number, status: string): Promise<Order> {
+    console.log(`[Storage] Updating order ${orderId} to status ${status}`);
+    try {
+      const [order] = await db.update(orders)
+        .set({ status })
+        .where(eq(orders.id, orderId))
+        .returning();
+      if (!order) {
+        console.error(`[Storage] Order ${orderId} not found`);
+        throw new Error("Order not found");
+      }
+      return order;
+    } catch (err: any) {
+      console.error(`[Storage] Database error updating order ${orderId}:`, err);
+      throw err;
+    }
+  }
+
   // Vendor Management
   async updateUserRole(userId: string, role: string): Promise<void> {
     await db.update(users).set({ role }).where(eq(users.id, userId));
@@ -257,6 +280,42 @@ export class DatabaseStorage implements IStorage {
 
   async getVendorProducts(vendorId: string): Promise<Product[]> {
     return await db.select().from(products).where(eq(products.vendorId, vendorId));
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async getAllOrders(): Promise<OrderWithItems[]> {
+    const allOrders = await db.select().from(orders).orderBy(desc(orders.createdAt));
+
+    const ordersWithItems = await Promise.all(allOrders.map(async (order) => {
+      const items = await db.select({
+        orderItem: orderItems,
+        product: products
+      })
+        .from(orderItems)
+        .innerJoin(products, eq(orderItems.productId, products.id))
+        .where(eq(orderItems.orderId, order.id));
+
+      const [user] = await db.select().from(users).where(eq(users.id, order.userId));
+
+      return {
+        ...order,
+        user,
+        items: items.map(i => ({ ...i.orderItem, product: i.product }))
+      };
+    }));
+
+    return ordersWithItems as any;
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
+  }
+
+  async deleteProduct(id: number): Promise<void> {
+    await db.delete(products).where(eq(products.id, id));
   }
 }
 

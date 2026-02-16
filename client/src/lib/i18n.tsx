@@ -52,6 +52,7 @@ const translations: Record<Language, Record<string, string>> = {
         "vendor.stock": "Stock",
         "vendor.category": "Category",
         "vendor.image_url": "Image URL",
+        "common.currency": "LE",
     },
     ar: {
         "nav.home": "الرئيسية",
@@ -96,6 +97,7 @@ const translations: Record<Language, Record<string, string>> = {
         "vendor.stock": "المخزون",
         "vendor.category": "الفئة",
         "vendor.image_url": "رابط الصورة",
+        "common.currency": "ج.م",
     }
 };
 

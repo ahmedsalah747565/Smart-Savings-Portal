@@ -58,9 +58,9 @@ export default function Cart() {
                       <p className="text-sm text-muted-foreground">{language === "ar" ? product.category.nameAr : product.category.nameEn}</p>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-lg">${(Number(product.price) * quantity).toFixed(2)}</div>
+                      <div className="font-bold text-lg">{t("common.currency")} {(Number(product.price) * quantity).toFixed(2)}</div>
                       <div className="text-xs text-green-600 font-medium">
-                        Saved ${(Number(Number(product.originalPrice) - Number(product.price)) * quantity).toFixed(2)}
+                        Saved {t("common.currency")} {(Number(Number(product.originalPrice) - Number(product.price)) * quantity).toFixed(2)}
                       </div>
                     </div>
                   </div>
@@ -103,7 +103,7 @@ export default function Cart() {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-muted-foreground">
                   <span>Subtotal</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>{t("common.currency")} {total.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Shipping</span>
@@ -111,12 +111,12 @@ export default function Cart() {
                 </div>
                 <div className="flex justify-between items-center text-sm bg-green-50 p-2 rounded text-green-700">
                   <span>Total Savings</span>
-                  <span className="font-bold">-${savings.toFixed(2)}</span>
+                  <span className="font-bold">-{t("common.currency")} {savings.toFixed(2)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>{t("common.currency")} {total.toFixed(2)}</span>
                 </div>
               </div>
 

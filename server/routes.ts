@@ -5,8 +5,17 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import { factories, categories, products, reviews, users } from "@shared/schema";
 import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
+
 import { isAuthenticated } from "./replit_integrations/auth";
+
+const isAdmin = (req: any, res: Response, next: any) => {
+  if (req.user && req.user.role === "admin") {
+    return next();
+  }
+  res.status(403).json({ message: "Admin access required" });
+};
 
 export async function registerRoutes(
   httpServer: Server,
@@ -110,7 +119,7 @@ export async function registerRoutes(
   });
 
   app.get("/api/vendor/products", isAuthenticated, async (req: any, res) => {
-    if (req.user.role !== "vendor" && req.user.role !== "manufacturer") {
+    if (req.user.role !== "vendor" && req.user.role !== "manufacturer" && req.user.role !== "admin") {
       return res.status(403).json({ message: "Unauthorized" });
     }
     const userId = req.user.claims ? req.user.claims.sub : req.user.id;
@@ -119,7 +128,7 @@ export async function registerRoutes(
   });
 
   app.post("/api/vendor/products", isAuthenticated, async (req: any, res) => {
-    if (req.user.role !== "vendor" && req.user.role !== "manufacturer") {
+    if (req.user.role !== "vendor" && req.user.role !== "manufacturer" && req.user.role !== "admin") {
       return res.status(403).json({ message: "Unauthorized" });
     }
     const userId = req.user.claims ? req.user.claims.sub : req.user.id;
@@ -128,7 +137,7 @@ export async function registerRoutes(
   });
 
   app.patch("/api/vendor/products/:id", isAuthenticated, async (req: any, res) => {
-    if (req.user.role !== "vendor" && req.user.role !== "manufacturer") {
+    if (req.user.role !== "vendor" && req.user.role !== "manufacturer" && req.user.role !== "admin") {
       return res.status(403).json({ message: "Unauthorized" });
     }
     const userId = req.user.claims ? req.user.claims.sub : req.user.id;
@@ -142,6 +151,40 @@ export async function registerRoutes(
     res.json(categories);
   });
 
+  // === ADMIN ROUTES ===
+  app.get("/api/admin/users", isAuthenticated, isAdmin, async (_req: any, res) => {
+    const users = await storage.getAllUsers();
+    res.json(users);
+  });
+
+  app.get("/api/admin/orders", isAuthenticated, isAdmin, async (_req: any, res) => {
+    const orders = await storage.getAllOrders();
+    res.json(orders);
+  });
+
+  app.patch("/api/admin/orders/:id/status", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const orderId = Number(req.params.id);
+      const { status } = req.body;
+      if (!status) return res.status(400).json({ message: "Status is required" });
+      const order = await storage.updateOrderStatus(orderId, status);
+      res.json(order);
+    } catch (err: any) {
+      console.error(`Error updating order ${req.params.id} status:`, err.stack || err.message);
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  app.delete("/api/admin/users/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    await storage.deleteUser(req.params.id);
+    res.json({ message: "User deleted successfully" });
+  });
+
+  app.delete("/api/admin/products/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    await storage.deleteProduct(Number(req.params.id));
+    res.json({ message: "Product deleted successfully" });
+  });
+
   // Seed Data
   await seedDatabase();
 
@@ -149,6 +192,23 @@ export async function registerRoutes(
 }
 
 async function seedDatabase() {
+  // 0. Create Admin User
+  const adminEmail = "admin@smart.com";
+  const [existingAdmin] = await db.select().from(users).where(eq(users.email, adminEmail));
+
+  if (!existingAdmin) {
+    console.log("Seeding admin account...");
+    const bcrypt = await import("bcryptjs");
+    const hashedPassword = await bcrypt.default.hash("admin123", 10);
+    await db.insert(users).values({
+      email: adminEmail,
+      password: hashedPassword,
+      firstName: "System",
+      lastName: "Admin",
+      role: "admin"
+    });
+  }
+
   const existingFactories = await storage.getFactories();
   if (existingFactories.length > 0) return;
 

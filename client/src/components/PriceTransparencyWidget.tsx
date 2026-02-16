@@ -8,6 +8,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+import { useTranslation } from "@/lib/i18n";
+
 interface PriceTransparencyWidgetProps {
   originalPrice: number;
   ourPrice: number;
@@ -15,6 +17,7 @@ interface PriceTransparencyWidgetProps {
 }
 
 export function PriceTransparencyWidget({ originalPrice, ourPrice, productName }: PriceTransparencyWidgetProps) {
+  const { t } = useTranslation();
   const savings = originalPrice - ourPrice;
   const savingsPercent = Math.round((savings / originalPrice) * 100);
 
@@ -53,7 +56,7 @@ export function PriceTransparencyWidget({ originalPrice, ourPrice, productName }
           Save {savingsPercent}%
         </Badge>
       </div>
-      
+
       <CardContent className="pt-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="h-[200px] w-full">
@@ -64,27 +67,27 @@ export function PriceTransparencyWidget({ originalPrice, ourPrice, productName }
                 margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
               >
                 <XAxis type="number" hide />
-                <YAxis 
-                  dataKey="name" 
-                  type="category" 
-                  width={100} 
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  width={100}
                   tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }}
                   axisLine={false}
                   tickLine={false}
                 />
-                <Tooltip 
+                <Tooltip
                   cursor={{ fill: 'transparent' }}
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Price']}
+                  formatter={(value) => [`${t("common.currency")} ${Number(value).toFixed(2)}`, 'Price']}
                 />
                 <Bar dataKey="price" radius={[0, 4, 4, 0]} barSize={32}>
                   {data.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
                   ))}
-                  <LabelList 
-                    dataKey="price" 
-                    position="right" 
-                    formatter={(val: number) => `$${val.toFixed(0)}`}
+                  <LabelList
+                    dataKey="price"
+                    position="right"
+                    formatter={(val: number) => `${t("common.currency")} ${val.toFixed(0)}`}
                     style={{ fill: '#334155', fontWeight: 'bold', fontSize: '14px' }}
                   />
                 </Bar>
@@ -95,16 +98,16 @@ export function PriceTransparencyWidget({ originalPrice, ourPrice, productName }
           <div className="space-y-4">
             <div className="flex justify-between items-center border-b border-border pb-2">
               <span className="text-muted-foreground">Typical Retail Markup</span>
-              <span className="font-mono text-destructive line-through">${(originalPrice * 0.6).toFixed(2)}</span>
+              <span className="font-mono text-destructive line-through">{t("common.currency")} {(originalPrice * 0.6).toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center border-b border-border pb-2">
               <span className="text-muted-foreground">Middlemen Fees</span>
-              <span className="font-mono text-destructive line-through">${(originalPrice * 0.25).toFixed(2)}</span>
+              <span className="font-mono text-destructive line-through">{t("common.currency")} {(originalPrice * 0.25).toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center pt-2">
               <span className="font-bold text-lg text-primary">Your Savings</span>
               <span className="font-bold text-2xl text-accent-foreground bg-accent/20 px-3 py-1 rounded-md">
-                ${savings.toFixed(2)}
+                {t("common.currency")} {savings.toFixed(2)}
               </span>
             </div>
           </div>

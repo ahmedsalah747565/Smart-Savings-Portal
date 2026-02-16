@@ -163,7 +163,7 @@ export default function VendorDashboard() {
                         </CardHeader>
                         <CardContent className="p-4 pt-0">
                             <div className="flex justify-between items-center mb-4">
-                                <div className="text-primary font-bold">${Number(product.price).toFixed(2)}</div>
+                                <div className="text-primary font-bold">{t("common.currency")} {Number(product.price).toFixed(2)}</div>
                                 <div className="text-sm flex items-center gap-1">
                                     <Package className="h-4 w-4" />
                                     {product.stock}

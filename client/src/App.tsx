@@ -20,12 +20,14 @@ import About from "@/pages/About";
 import VendorDashboard from "@/pages/VendorDashboard";
 import AuthPage from "@/pages/AuthPage";
 import Profile from "@/pages/Profile";
+import AdminDashboard from "@/pages/AdminDashboard";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/admin" component={AdminDashboard} />
       <Route path="/products" component={ProductList} />
       <Route path="/product/:id" component={ProductDetail} />
       <Route path="/cart" component={Cart} />

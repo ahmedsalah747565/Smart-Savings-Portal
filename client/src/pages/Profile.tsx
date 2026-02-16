@@ -116,7 +116,7 @@ export default function Profile() {
                                                                 </div>
                                                                 <div>
                                                                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Total</p>
-                                                                    <p className="text-sm font-bold text-primary">${Number(order.total).toFixed(2)}</p>
+                                                                    <p className="text-sm font-bold text-primary">{t("common.currency")} {Number(order.total).toFixed(2)}</p>
                                                                 </div>
                                                                 <div>
                                                                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Payment</p>
@@ -137,7 +137,7 @@ export default function Profile() {
                                                                         <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
                                                                     </div>
                                                                     <div className="text-right">
-                                                                        <p className="font-bold text-sm">${(Number(item.price) * item.quantity).toFixed(2)}</p>
+                                                                        <p className="font-bold text-sm">{t("common.currency")} {(Number(item.price) * item.quantity).toFixed(2)}</p>
                                                                     </div>
                                                                 </div>
                                                             ))}
