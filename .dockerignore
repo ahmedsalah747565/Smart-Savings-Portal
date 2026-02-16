@@ -1,0 +1,11 @@
+.git
+node_modules
+dist
+.env
+.replit
+replit.md
+attached_assets
+migrations
+server_log.txt
+README.md
+script/setup_local_db.sh

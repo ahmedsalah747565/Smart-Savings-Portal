@@ -104,7 +104,7 @@ export async function registerRoutes(
 
   // === VENDOR ===
   app.post("/api/user/apply-vendor", isAuthenticated, async (req: any, res) => {
-    const userId = req.user.claims.sub;
+    const userId = req.user.claims ? req.user.claims.sub : req.user.id;
     await storage.updateUserRole(userId, "vendor");
     res.json({ message: "Successfully applied as vendor" });
   });
@@ -113,7 +113,7 @@ export async function registerRoutes(
     if (req.user.role !== "vendor" && req.user.role !== "manufacturer") {
       return res.status(403).json({ message: "Unauthorized" });
     }
-    const userId = req.user.claims.sub;
+    const userId = req.user.claims ? req.user.claims.sub : req.user.id;
     const products = await storage.getVendorProducts(userId);
     res.json(products);
   });
@@ -122,7 +122,7 @@ export async function registerRoutes(
     if (req.user.role !== "vendor" && req.user.role !== "manufacturer") {
       return res.status(403).json({ message: "Unauthorized" });
     }
-    const userId = req.user.claims.sub;
+    const userId = req.user.claims ? req.user.claims.sub : req.user.id;
     const product = await storage.createProduct(userId, req.body);
     res.status(201).json(product);
   });
@@ -131,7 +131,7 @@ export async function registerRoutes(
     if (req.user.role !== "vendor" && req.user.role !== "manufacturer") {
       return res.status(403).json({ message: "Unauthorized" });
     }
-    const userId = req.user.claims.sub;
+    const userId = req.user.claims ? req.user.claims.sub : req.user.id;
     const productId = Number(req.params.id);
     const product = await storage.updateProduct(userId, productId, req.body);
     res.json(product);
