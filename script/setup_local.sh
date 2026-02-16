@@ -47,4 +47,17 @@ else
     echo "✅ Database $DB_NAME already exists."
 fi
 
+# 6. Update .env file
+echo "📝 Updating .env configuration..."
+if [ ! -f .env ]; then
+    cp .env.example .env
+fi
+
+# Detect OS and use appropriate sed syntax
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "s|DATABASE_URL=.*|DATABASE_URL=\"postgresql://$DB_USER@localhost:$DB_PORT/$DB_NAME?host=$DB_DIR\"|g" .env
+else
+    sed -i "s|DATABASE_URL=.*|DATABASE_URL=\"postgresql://$DB_USER@localhost:$DB_PORT/$DB_NAME?host=$DB_DIR\"|g" .env
+fi
+
 echo "✨ Setup complete! You can now run 'npm run dev'"

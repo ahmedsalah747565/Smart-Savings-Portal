@@ -16,9 +16,11 @@ services:
     build: .
     ports:
       - "5000:5000"
+    env_file:
+      - .env
     environment:
+      # These override values in .env if set
       DATABASE_URL: postgresql://postgres:postgres_password@db:5432/smart_savings
-      SESSION_SECRET: ${SESSION_SECRET:-super_secret_savings_key_2026}
       NODE_ENV: production
       PORT: 5000
     depends_on:
