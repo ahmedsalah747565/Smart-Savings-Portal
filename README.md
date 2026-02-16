@@ -1,332 +1,135 @@
-# Smart Savings Portal
+# Smart Savings Portal 🛍️
 
-A modern e-commerce platform for factory-direct products with significant savings. Built with React, Express, PostgreSQL, and Drizzle ORM.
+![Smart Savings Portal Mockup](https://raw.githubusercontent.com/ahmedsalah747565/Smart-Savings-Portal/main/client/public/hero-mockup.png)
 
-## Features
-
-- 🛍️ **Factory-Direct Shopping**: Browse 25+ products across multiple categories (Gourmet & Pantry, Beverages, Superfoods, Beauty & Cosmetics, Health & Pharmacy, Fresh Dairy)
-- 💰 **Smart Savings**: See real-time savings compared to retail prices
-- 🌍 **Bilingual Support**: Full English and Arabic language support
-- 📦 **Expiry Tracking**: Visual indicators for perishable products
-- 🔐 **User Authentication**: Secure login and profile management
-- 🛒 **Shopping Cart**: Add items and checkout with MOQ (Minimum Order Quantity) of 30 items
-- 📱 **Responsive Design**: Works seamlessly on desktop and mobile devices
-
-## Tech Stack
-
-### Frontend
-- **React 18** with TypeScript
-- **Wouter** for routing
-- **TanStack Query** for data fetching
-- **Framer Motion** for animations
-- **Tailwind CSS** for styling
-- **Shadcn UI** components
-- **i18next** for internationalization
-
-### Backend
-- **Express 5** with TypeScript
-- **PostgreSQL** database
-- **Drizzle ORM** for database operations
-- **Passport.js** for authentication
-- **Express Session** with PostgreSQL store
-
-## Prerequisites
-
-Before deploying this project on another device, ensure you have:
-
-- **Node.js** (v20.x or higher)
-- **PostgreSQL** (v17 or v18)
-- **npm** or **yarn** package manager
-- **Git** (for cloning the repository)
-
-## Deployment Instructions
-
-### 1. Clone the Repository
-
-```bash
-git clone <your-repository-url>
-cd Smart-Savings-Portal
-```
-
-### 2. Install Dependencies
-
-```bash
-npm install
-```
-
-### 3. Set Up PostgreSQL Database
-
-#### Option A: Using PostgreSQL 17 (Custom Data Directory)
-
-If you want to use a custom PostgreSQL instance:
-
-```bash
-# Create data directory
-mkdir -p ~/smart_db/data
-
-# Initialize PostgreSQL database
-/usr/lib/postgresql/17/bin/initdb -D ~/smart_db/data
-
-# Start PostgreSQL on port 5433
-/usr/lib/postgresql/17/bin/pg_ctl -D ~/smart_db/data \
-  -l ~/smart_db/logfile \
-  -o "-p 5433 -k ~/smart_db" start
-
-# Create the database
-/usr/lib/postgresql/17/bin/createdb -p 5433 -h ~/smart_db smart_savings
-```
-
-#### Option B: Using System PostgreSQL
-
-If you have PostgreSQL installed system-wide:
-
-```bash
-# Start PostgreSQL service
-sudo service postgresql start
-
-# Create database (adjust port if needed)
-createdb -p 5432 smart_savings
-```
-
-### 4. Configure Environment Variables
-
-Create a `.env` file in the project root (or export these variables):
-
-```bash
-# For custom PostgreSQL on port 5433
-export DATABASE_URL="postgres://YOUR_USERNAME@localhost:5433/smart_savings"
-
-# For system PostgreSQL on port 5432
-# export DATABASE_URL="postgres://YOUR_USERNAME@localhost:5432/smart_savings"
-
-# Session secret (change this to a random string)
-export SESSION_SECRET="your_very_secret_key_here_change_this"
-
-# Node environment
-export NODE_ENV="development"
-```
-
-**Important**: Replace `YOUR_USERNAME` with your system username (e.g., `postgres` or your Linux username).
-
-### 5. Initialize Database Schema
-
-Push the database schema using Drizzle:
-
-```bash
-DATABASE_URL="postgres://YOUR_USERNAME@localhost:5433/smart_savings" npm run db:push
-```
-
-### 6. Seed the Database
-
-The application will automatically seed the database with initial data (categories, factories, and 25 products) on first run.
-
-### 7. Start the Development Server
-
-```bash
-DATABASE_URL="postgres://YOUR_USERNAME@localhost:5433/smart_savings" \
-SESSION_SECRET="your_very_secret_key_here" \
-npm run dev
-```
-
-The application will be available at: **http://localhost:5000**
-
-### 8. Access the Application
-
-Open your browser and navigate to:
-- **Home Page**: http://localhost:5000/
-- **Products**: http://localhost:5000/products
-- **About**: http://localhost:5000/about
-
-## Production Deployment
-
-For production deployment:
-
-### 1. Build the Application
-
-```bash
-npm run build
-```
-
-### 2. Set Production Environment Variables
-
-```bash
-export NODE_ENV="production"
-export DATABASE_URL="postgres://YOUR_USERNAME@localhost:5433/smart_savings"
-export SESSION_SECRET="your_production_secret_key"
-export PORT="5000"
-```
-
-### 3. Start the Production Server
-
-```bash
-npm start
-```
-
-## Database Management
-
-### Check PostgreSQL Status
-
-```bash
-# For custom instance
-/usr/lib/postgresql/17/bin/pg_ctl -D ~/smart_db/data status
-
-# For system PostgreSQL
-sudo service postgresql status
-```
-
-### Stop PostgreSQL
-
-```bash
-# For custom instance
-/usr/lib/postgresql/17/bin/pg_ctl -D ~/smart_db/data stop
-
-# For system PostgreSQL
-sudo service postgresql stop
-```
-
-### View Database Contents
-
-```bash
-# Connect to database
-psql -p 5433 -d smart_savings
-
-# Or for system PostgreSQL
-psql -p 5432 -d smart_savings
-
-# Useful queries:
-# SELECT * FROM products;
-# SELECT * FROM categories;
-# SELECT * FROM factories;
-```
-
-## Troubleshooting
-
-### Port Already in Use
-
-If port 5000 is already in use:
-
-```bash
-# Kill the process using port 5000
-fuser -k 5000/tcp
-
-# Or find and kill manually
-lsof -i :5000
-kill -9 <PID>
-```
-
-### Database Connection Issues
-
-1. **Check PostgreSQL is running**:
-   ```bash
-   pg_lsclusters  # Shows all PostgreSQL clusters
-   ```
-
-2. **Verify connection string**: Ensure `DATABASE_URL` matches your PostgreSQL setup
-
-3. **Check PostgreSQL logs**:
-   ```bash
-   tail -f ~/smart_db/logfile
-   ```
-
-### Missing Dependencies
-
-If you encounter module errors:
-
-```bash
-# Clear node_modules and reinstall
-rm -rf node_modules package-lock.json
-npm install
-```
-
-### Disk Space Issues
-
-If you run out of disk space:
-
-```bash
-# Clear npm cache
-npm cache clean --force
-
-# Clear system cache
-rm -rf ~/.cache/*
-rm -rf ~/.npm/*
-```
-
-## Project Structure
-
-```
-Smart-Savings-Portal/
-├── client/                 # Frontend React application
-│   ├── src/
-│   │   ├── components/    # Reusable UI components
-│   │   ├── hooks/         # Custom React hooks
-│   │   ├── lib/           # Utilities and i18n
-│   │   ├── pages/         # Page components
-│   │   └── main.tsx       # Entry point
-│   ├── public/            # Static assets
-│   └── index.html         # HTML template
-├── server/                # Backend Express application
-│   ├── routes.ts          # API routes
-│   ├── storage.ts         # Database operations
-│   ├── db.ts              # Database connection
-│   └── index.ts           # Server entry point
-├── shared/                # Shared code between client/server
-│   ├── schema.ts          # Database schema & types
-│   ├── routes.ts          # API route definitions
-│   └── models/            # Data models
-├── migrations/            # Database migrations
-└── package.json           # Dependencies
-```
-
-## Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm start` - Start production server
-- `npm run check` - Type check with TypeScript
-- `npm run db:push` - Push schema changes to database
-
-## Default Test User
-
-For testing authentication:
-- **Email**: test@example.com
-- **Password**: password123
-
-## API Endpoints
-
-- `GET /api/products` - List all products
-- `GET /api/products/:id` - Get product details
-- `GET /api/categories` - List categories
-- `GET /api/factories` - List factories
-- `POST /api/orders` - Create order (requires auth)
-- `GET /api/orders` - Get user orders (requires auth)
-- `POST /api/auth/login` - Login
-- `POST /api/auth/register` - Register
-- `GET /api/auth/user` - Get current user
-
-## Image Assets
-
-All product, category, and factory images are sourced from Unsplash and are properly attributed. Images are loaded via CDN for optimal performance.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## License
-
-MIT License - feel free to use this project for learning or commercial purposes.
-
-## Support
-
-For issues or questions:
-1. Check the troubleshooting section above
-2. Review server logs for error details
-3. Ensure all environment variables are correctly set
-4. Verify PostgreSQL is running and accessible
+A high-end, modern e-commerce platform dedicated to factory-direct products. **Smart Savings Portal** connects consumers directly with manufacturers, eliminating middleman markups and providing significant savings on premium goods.
 
 ---
 
-**Built with ❤️ for factory-direct savings**
+## ✨ Features
+
+- 🏗️ **Factory-Direct Model**: Browse products directly from authenticated factories.
+- 💰 **Real-Time Savings**: Dynamic price comparisons against retail market rates.
+- 🌍 **Bilingual Support**: Full internationalization for English and Arabic users.
+- 📦 **Inventory Management**: Real-time stock tracking and expiry indicators for perishable goods.
+- 🔐 **Secure Auth**: Robust user authentication and profile management via Passport.js.
+- 🛒 **Smart Cart**: Bulk ordering support with Minimum Order Quantity (MOQ) logic.
+- 📱 **Fully Responsive**: Optimized for desktop, tablet, and mobile experiences.
+
+---
+
+## 🚀 Tech Stack
+
+### Frontend
+- **React 18** + **TypeScript**
+- **Tailwind CSS** + **Shadcn UI** for premium styling
+- **Framer Motion** for smooth, high-end animations
+- **TanStack Query** for efficient data fetching
+- **i18next** for seamless language switching
+
+### Backend
+- **Express 5** + **Node.js**
+- **PostgreSQL** with **Drizzle ORM**
+- **Passport.js** for secure session-based authentication
+- **Zod** for end-to-end type safety and validation
+
+---
+
+## 🛠️ Getting Started
+
+Follow these steps to set up the project from scratch on your local machine.
+
+### 1. Prerequisites
+- **Node.js**: v20.x or higher
+- **PostgreSQL**: v17 or v18
+- **npm** or **yarn**
+
+### 2. Clone the Repository
+```bash
+git clone https://github.com/ahmedsalah747565/Smart-Savings-Portal.git
+cd Smart-Savings-Portal
+```
+
+### 3. Install Dependencies
+```bash
+npm install
+```
+
+### 4. Database Setup
+
+We have made it easy to "share" and initialize the database. Choose one of the following methods:
+
+#### Option A: Quick Setup (Automated Linux Script) - RECOMMENDED
+If you are on Linux, simply run:
+```bash
+npm run db:setup
+```
+This script will initialize a local PostgreSQL instance, create the `smart_savings` database, and load the pre-configured **25+ product seed** data automatically.
+
+#### Option B: Docker (Zero Installation)
+If you have Docker installed, you can start the entire stack (Database + App) with:
+```bash
+docker-compose up --build
+```
+The database will be automatically provisioned with all seed data.
+
+#### Option C: Manual Setup
+If you prefer manual control:
+1. Create the database `smart_savings`.
+2. Update `.env` with your `DATABASE_URL`.
+3. Import the seed data: `psql -d smart_savings -f infra/postgres/init/db_seed.sql`
+
+### 5. Environment Configuration
+Create a `.env` file in the root directory:
+```env
+# Database URL (Update with your credentials)
+DATABASE_URL="postgresql://YOUR_USERNAME@localhost:5433/smart_savings?host=/home/YOUR_USERNAME/smart_db"
+
+# Session Secret (Use a strong random string)
+SESSION_SECRET="your_secure_secret_here"
+
+# Application Settings
+NODE_ENV="development"
+PORT=5000
+```
+
+### 6. Initialize Database Schema
+Push the Drizzle schema to your database:
+```bash
+npm run db:push
+```
+
+### 7. Run the Application
+Start the development server:
+```bash
+npm run dev
+```
+The application will be available at [http://localhost:5000](http://localhost:5000).
+
+---
+
+## 📜 Available Scripts
+
+- `npm run dev` - Starts the development server (Backend + Vite Frontend).
+- `npm run build` - Builds the project for production.
+- `npm start` - Runs the production build.
+- `npm run db:push` - Synchronizes your local DB with the Drizzle schema.
+- `npm run check` - Runs TypeScript type checking.
+
+---
+
+## 🧑‍💻 Default Test Account
+- **Username**: `test@example.com`
+- **Password**: `password123`
+
+---
+
+## 🔧 Troubleshooting
+
+- **Port 5000 Busy**: If the port is in use, run `fuser -k 5000/tcp` or change `PORT` in `.env`.
+- **DB Connection Error**: Verify your `DATABASE_URL` and ensure PostgreSQL is running (`pg_ctl status`).
+- **Missing Images**: Ensure you have an active internet connection, as product images are served via Unsplash CDN.
+
+---
+
+Built with ❤️ for the Smart Savings Community.
